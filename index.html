@@ -159,6 +159,18 @@
         document.body.addEventListener('click', () => {
             update();
         });
+
+        // 1. Push a dummy state into the history stack
+        window.history.pushState(null, null, window.location.href);
+
+        window.onpopstate = function(event) {
+            // 2. When the user clicks "Back", push the state again to stay on the page
+            window.history.pushState(null, null, window.location.href);
+            
+            // 3. Trigger your custom logic here
+            const backButton = document.getElementById('view-activity-back-button');
+            backButton.click();
+        };
     </script>
 </body>
 </html>
