@@ -63,6 +63,10 @@ async function loadJSONForEditing() {
 async function loadJSON() {
     let data = await tryLoadJSONFromServer() ?? localStorage.getItem('activities');
 
+    if (!data) {
+        data = await tryLoadJSONFromServer(true);
+    }
+
     localStorage.setItem("activities", data);
 
     if (data) {
