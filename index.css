@@ -59,6 +59,10 @@ h2 {
     }
 }
 
+.controls {
+    margin-bottom: 16px;
+}
+
 #view-activity-back-button {
         padding: 8px 16px;
         width: 100%;
