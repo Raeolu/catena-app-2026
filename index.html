@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="activities_data.js"></script>
+    <script src="pages.js"></script>
+    <script src="utils.js"></script>
+    <script src="activity.js"></script>
+</head>
+<body>
+    <div id="background">
+
+    </div>
+
+    <template id="notebook-row">
+        <div class="notebook-row"></div>
+    </template>
+
+    <div class="page" id="start-page">
+
+    </div>
+
+    <div class="page" id="view-activity-page">
+        <div id="view-activity-wrapper">
+
+        </div>
+        <div class="controls">
+            <button id="view-activity-rsvp-button">Ik ben van plan om te gaan</button>
+            <button id="view-activity-back-button">Terug</button>
+        </div>
+    </div>
+
+    <template id="start-page-footer">
+        <p style="text-align: center;">Geen verdere activiteiten gepland</p>
+    </template>
+
+    <template id="start-activity-template">
+        <div class="start-activity">
+            <h2 class="title"><span data-fill="title"></span></h2>
+            <div class="date-time">
+                <span data-fill="dateDescription"></span>
+                <span data-fill="timeDescription"></span>
+            </div>
+            <p class="peopleCount-wrapper">
+                <span class="peopleCount" data-fill="peopleCount"></span> leden zijn van plan om te gaan
+            </p>
+            <p class="short"><span data-fill="short"></span></p>
+            <button class="show-more">Meer info...</button>
+        </div>
+    </template>
+
+    <template id="view-activity-template">
+        <div class="view-activity">
+            <h2 class="title"><span data-fill="title"></span></h2>
+            <div class="date-time">
+                <span data-fill="dateDescription"></span>
+                <span data-fill="timeDescription"></span>
+            </div>
+            <p class="peopleCount-wrapper">
+                <span class="peopleCount" data-fill="peopleCount"></span> leden zijn van plan om te gaan
+            </p>
+            <p class="description"><span data-fill="description"></span></p>
+        </div>
+    </template>
+
+    <script>
+        const rowHeight = 50;
+        for (let i = 0; i < window.innerHeight / rowHeight; i++) {
+            const template = document.getElementById('notebook-row');
+            const clone = template.content.cloneNode(true);
+            const row = clone.querySelector('.notebook-row');
+
+            row.style.height = `${rowHeight}px`;
+
+            document.getElementById('background').appendChild(clone);
+        }
+
+        currentPage = 'start-page';
+
+        window.pages = {
+            'start-page': {
+                update: function() {
+                    console.log("Start Page Update");
+                }
+            },
+            'view-activity-page': {
+                init: function() {
+                    const backButton = document.getElementById('view-activity-back-button');
+                    backButton.addEventListener('click', () => {
+                        currentPage = 'start-page';
+                    });
+                },
+                update: function() {
+                    if (this.currentActivity === this.currentLoadedActivity) {
+                        return;
+                    }
+
+                    this.loadActivity(this.currentActivity);
+
+                    console.log("View Activity Page Update");
+                },
+                loadActivity: function(activity) {
+                    const viewActivityWrapper = document.getElementById('view-activity-wrapper');
+                    viewActivityWrapper.innerHTML = '';
+
+                    const activityClone = createTemplate(activity, 'view-activity-template');
+                    viewActivityWrapper.appendChild(activityClone);
+
+                    const viewActivityPage = document.getElementById('view-activity-page');
+
+                    this.currentLoadedActivity = activity;
+                },
+                currentActivity: null,
+                currentLoadedActivity: null
+            }
+        }
+
+        function loadActivities() {
+            const viewStartPage = document.getElementById('start-page');
+            const viewActivityPage = document.getElementById('view-activity-page');
+
+            activities.sort((a, b) => {
+                return (a.date - b.date) + (timeStringToTimeFloat(a.timeStart) - timeStringToTimeFloat(b.timeStart));
+            });
+
+            for (let activity of activities) {
+                const activityClone = createTemplate(activity, 'start-activity-template');
+
+                viewStartPage.appendChild(activityClone);
+
+                let activityElement = viewStartPage.lastElementChild;
+
+                activityElement.addEventListener('click', () => {
+                    pages['view-activity-page'].currentActivity = activity;
+                    currentPage = 'view-activity-page';
+                });
+            };
+
+            const footerClone = createTemplate({}, 'start-page-footer');
+
+            viewStartPage.appendChild(footerClone);
+        }
+
+        // DEBUG
+        currentPage = 'view-activity-page';
+        pages['view-activity-page'].currentActivity = activities[1];
+        // END DEBUG
+
+        (async () => {
+            await loadJSON();
+            loadActivities();
+            init();
+            update();
+        })();
+
+        document.body.addEventListener('click', () => {
+            update();
+        });
+    </script>
+</body>
+</html>

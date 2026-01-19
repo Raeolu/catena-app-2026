@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            font-family: system-ui, sans-serif;
+        }
+
+        #editor {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 8px;
+
+            label {
+                font-weight: bold;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="index.css">
+    <script src="activities_data.js"></script>
+    <script src="pages.js"></script>
+    <script src="utils.js"></script>
+    <script src="activity.js"></script>
+</head>
+
+<body>
+    <div class="page" id="start-page">
+
+    </div>
+    <template id="start-activity-template">
+        <div class="start-activity">
+            <h2 class="title"><span data-fill="title"></span></h2>
+            <div class="date-time">
+                <span data-fill="dateDescription"></span>
+                <span data-fill="timeDescription"></span>
+            </div>
+            <p class="peopleCount-wrapper">
+                <span class="peopleCount" data-fill="peopleCount"></span> leden zijn van plan om te gaan
+            </p>
+            <p class="short"><span data-fill="short"></span></p>
+            <button class="show-more">Aanpassen</button>
+        </div>
+    </template>
+    <div class="page" id="editor">
+        <label for="input-title">Titel:</label>
+        <input type="text" id="input-title" placeholder="Titel" />
+
+        <label for="input-short">Korte beschrijving:</label>
+        <input type="text" id="input-short" placeholder="Korte beschrijving" />
+
+        <label for="input-description">Lange beschrijving:</label>
+        <div id="input-description" contenteditable="true" style="border: 1px solid black; padding: 8px; min-height: 100px;" placeholder="Beschrijving"></div>
+
+        <label for="input-date">Datum:</label>
+        <input type="date" id="input-date" />
+
+        <label for="input-time-start">Starttijd:</label>
+        <input type="time" id="input-time-start" />
+
+        <label for="input-time-end">Eindtijd:</label>
+        <input type="time" id="input-time-end" />
+
+        <button id="save-activity">Opslaan</button>
+        <button id="delete-activity">Verwijderen</button>
+    </div>
+    <script>
+        window.pages = {
+            'start-page': {
+                update: function() {
+                    console.log("Start Page Update");
+                }
+            },
+            'editor': {
+                init: function() {
+                    const saveButton = document.getElementById('save-activity');
+                    saveButton.addEventListener('click', () => {
+                        this.saveActivity();
+                        saveJSON();
+                        currentPage = 'start-page';
+                    });
+
+                    const deleteButton = document.getElementById('delete-activity');
+                    deleteButton.addEventListener('click', () => {
+                        activities.splice(activities.indexOf(this.currentActivity), 1);
+                        this.currentActivity = null;
+                        currentPage = 'start-page';
+                        saveJSON();
+                        loadActivities();
+                    });
+                },
+                update: function() {
+                    if (this.currentActivity === this.currentLoadedActivity) {
+                        return;
+                    }
+
+                    this.loadActivity(this.currentActivity);
+                },
+                loadActivity: function(activity) {
+                    document.getElementById('input-title').value = activity ? activity.title : '';
+                    document.getElementById('input-short').value = activity ? activity.short : '';
+                    document.getElementById('input-description').innerHTML = activity ? activity.description : '';
+                    document.getElementById('input-date').value = activity ? activity.date.toISOString().split('T')[0] : '';
+                    document.getElementById('input-time-start').value = activity ? activity.timeStart : '';
+                    document.getElementById('input-time-end').value = activity ? activity.timeEnd : '';
+
+                    this.currentLoadedActivity = activity;
+                },
+                saveActivity: function() {
+                    let activity = {
+                        title: document.getElementById('input-title').value,
+                        short: document.getElementById('input-short').value,
+                        description: document.getElementById('input-description').innerHTML,
+                        date: document.getElementById('input-date').value,
+                        timeStart: document.getElementById('input-time-start').value,
+                        timeEnd: document.getElementById('input-time-end').value
+                    };
+
+                    activity = Activity.fromJSON(activity);
+
+                    let index = activities.indexOf(this.currentActivity);
+
+                    if (index === -1) {
+                        activities.push(activity);
+                    } else {
+                        activities[index] = activity;
+                    }
+                    loadActivities();
+                },
+                currentActivity: null,
+                currentLoadedActivity: null
+            }
+        }
+
+        function loadActivities() {
+            const viewStartPage = document.getElementById('start-page');
+            viewStartPage.innerHTML = '';
+            const viewActivityPage = document.getElementById('view-activity-page');
+
+            activities.sort((a, b) => {
+                return (a.date - b.date) + (timeStringToTimeFloat(a.timeStart) - timeStringToTimeFloat(b.timeStart));
+            });
+
+            for (let activity of activities) {
+                const activityClone = createTemplate(activity, 'start-activity-template');
+
+                viewStartPage.appendChild(activityClone);
+
+                let activityElement = viewStartPage.lastElementChild;
+
+                activityElement.addEventListener('click', () => {
+                    pages['editor'].currentActivity = activity;
+                    currentPage = 'editor';
+                });
+            };
+
+            // Append button to add new activity
+            const addNewActivityButton = document.createElement('button');
+            addNewActivityButton.textContent = 'Nieuwe activiteit toevoegen';
+            addNewActivityButton.addEventListener('click', () => {
+                pages['editor'].currentActivity = null;
+                currentPage = 'editor';
+            });
+            viewStartPage.appendChild(addNewActivityButton);
+        }
+
+        loadJSON();
+
+        currentPage = 'start-page';
+        loadActivities();
+        init();
+        update();
+
+        document.body.addEventListener('click', () => {
+            update();
+        });
+    </script>
+</body>
+
+</html>
