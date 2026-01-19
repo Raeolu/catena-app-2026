@@ -171,12 +171,15 @@
             viewStartPage.appendChild(addNewActivityButton);
         }
 
-        loadJSON();
-
         currentPage = 'start-page';
-        loadActivities();
-        init();
-        update();
+
+        (async () => {
+            await loadJSON();
+
+            loadActivities();
+            init();
+            update();
+        })();
 
         document.body.addEventListener('click', () => {
             update();
