@@ -49,7 +49,7 @@ function saveJSON() {
 }
 
 async function loadJSONForEditing() {
-    let data = await tryLoadJSONFromServer();
+    let data = await tryLoadJSONFromServer(true);
 
     if (data) {
         let activitiesData = JSON.parse(data);
@@ -72,11 +72,11 @@ async function loadJSON() {
     }
 }
 
-async function tryLoadJSONFromServer() {
+async function tryLoadJSONFromServer(ignoreLastFetch) {
     let lastFetch = localStorage.getItem('lastFetch');
     let now = new Date();
     
-    if (lastFetch) {
+    if (lastFetch && (ignoreLastFetch !== true)) {
         let lastFetchDate = new Date(lastFetch);
         let diffMinutes = (now - lastFetchDate) / 1000 / 60;
         if (diffMinutes < 10) {
