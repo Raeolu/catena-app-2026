@@ -22,7 +22,13 @@ function timeFloatToTimeString(timeFloat) {
 function saveJSON() {
     localStorage.setItem('activities', JSON.stringify(window.activities));
 
-    let key = prompt("Enter the key to save to server:", "");
+    let key = localStorage.getItem('serverKey');
+
+    if (!key) {
+        key = prompt("Enter the key to save to server:", "");
+    }
+    
+    localStorage.setItem('serverKey', key);
 
     fetch("https://raeolu.com/promo/promo", {
         method: 'POST',
