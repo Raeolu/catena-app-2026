@@ -61,8 +61,20 @@ async function loadJSON() {
 }
 
 async function tryLoadJSONFromServer() {
+    let lastFetch = localStorage.getItem('lastFetch');
+    let now = new Date();
+    
+    if (lastFetch) {
+        let lastFetchDate = new Date(lastFetch);
+        let diffMinutes = (now - lastFetchDate) / 1000 / 60;
+        if (diffMinutes < 10) {
+            return null;
+        }
+    }
+
     try {
         let data = await (await fetch("https://raeolu.com/promo/promo")).text();
+        localStorage.setItem('lastFetch', new Date().toISOString());
         return data;
     } catch (error) {
         return null;
