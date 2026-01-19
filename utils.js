@@ -48,6 +48,18 @@ function saveJSON() {
     .catch(error => alert('Error:', error));
 }
 
+async function loadJSONForEditing() {
+    let data = await tryLoadJSONFromServer();
+
+    if (data) {
+        let activitiesData = JSON.parse(data);
+
+        activities = activitiesData.map(activityData => Activity.fromJSON(activityData));
+    } else {
+        alert("Could not load data from server for editing.");
+    }
+}
+
 async function loadJSON() {
     let data = await tryLoadJSONFromServer() ?? localStorage.getItem('activities');
 
